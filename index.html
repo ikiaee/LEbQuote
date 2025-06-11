@@ -40,57 +40,5 @@
             <p>© <span id="currentYear"></span> Learn English by Quote and Wisdom</p>
         </footer>
     </div>
-
-    <script>
-        // Dynamically load posts
-        document.addEventListener("DOMContentLoaded", function() {
-            // Set current year
-            document.getElementById('currentYear').textContent = new Date().getFullYear();
-            
-            // Load post list
-            fetchPosts();
-            
-            // Mobile menu toggle
-            document.querySelector('.nav-toggle').addEventListener('click', () => {
-                document.querySelector('.nav-links').classList.toggle('active');
-            });
-
-            // Dark mode toggle
-            const themeToggle = document.getElementById('themeToggle');
-            themeToggle.addEventListener('click', () => {
-                document.documentElement.setAttribute('data-theme', 
-                    document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
-            });
-        });
-
-        async function fetchPosts() {
-            try {
-                const response = await fetch('posts/');
-                if (!response.ok) throw new Error('Could not fetch posts');
-                
-                const html = await response.text();
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                const links = doc.querySelectorAll('a[href$=".html"]');
-                
-                const postList = document.getElementById('postList');
-                postList.innerHTML = '';
-                
-                links.forEach(link => {
-                    const li = document.createElement('li');
-                    const fileName = link.href.split('/').pop();
-                    const displayName = fileName
-                        .replace('.html', '')
-                        .replace('_', ' at ');
-                    li.innerHTML = `<a href="posts/${fileName}">${displayName}</a>`;
-                    postList.appendChild(li);
-                });
-            } catch (error) {
-                console.error('Error loading posts:', error);
-                document.getElementById('postList').innerHTML = 
-                    '<li>Error loading posts. Please refresh the page.</li>';
-            }
-        }
-    </script>
 </body>
 </html>
