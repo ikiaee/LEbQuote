@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Navigation Bar -->
     <nav class="navbar">
         <a href="/" class="nav-logo">LEbQuote</a>
         <button class="nav-toggle">☰</button>
@@ -31,52 +30,67 @@
         <main>
             <section class="post-list">
                 <h2>All Posts</h2>
-                <ul>
-                    <!-- Your list items here (keep existing) -->
-                    <li><a href="posts/2025-06-11_06-24.html">2025-06-11 at 06-24</a></li>
-                    <!-- ... all other list items ... -->
+                <ul id="postList">
+                    <!-- Posts will be inserted here by JavaScript -->
                 </ul>
             </section>
         </main>
 
         <footer>
-            <p>© 2025 Learn English by Quote and Wisdom</p>
+            <p>© <span id="currentYear"></span> Learn English by Quote and Wisdom</p>
         </footer>
     </div>
 
-    <!-- JavaScript (right before closing body tag) -->
     <script>
-        // Mobile menu toggle
-        document.querySelector('.nav-toggle').addEventListener('click', () => {
-            document.querySelector('.nav-links').classList.toggle('active');
-        });
-
-        // Dark mode toggle
-        const themeToggle = document.getElementById('themeToggle');
-        themeToggle.addEventListener('click', () => {
-            document.documentElement.setAttribute('data-theme', 
-                document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
-        });
-
-        // Lazy loading
+        // Dynamically load posts
         document.addEventListener("DOMContentLoaded", function() {
-            const lazyMedia = document.querySelectorAll(".lazy-load");
+            // Set current year
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
             
-            const lazyLoad = target => {
-                target.classList.add("loaded");
-            };
-
-            const observer = new IntersectionObserver((entries, observer) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        lazyLoad(entry.target);
-                        observer.unobserve(entry.target);
-                    }
-                });
+            // Load post list
+            fetchPosts();
+            
+            // Mobile menu toggle
+            document.querySelector('.nav-toggle').addEventListener('click', () => {
+                document.querySelector('.nav-links').classList.toggle('active');
             });
 
-            lazyMedia.forEach(media => observer.observe(media));
+            // Dark mode toggle
+            const themeToggle = document.getElementById('themeToggle');
+            themeToggle.addEventListener('click', () => {
+                document.documentElement.setAttribute('data-theme', 
+                    document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+            });
         });
+
+        async function fetchPosts() {
+            try {
+                const response = await fetch('posts/');
+                if (!response.ok) throw new Error('Could not fetch posts');
+                
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const links = doc.querySelectorAll('a[href$=".html"]');
+                
+                const postList = document.getElementById('postList');
+                postList.innerHTML = '';
+                
+                links.forEach(link => {
+                    const li = document.createElement('li');
+                    const fileName = link.href.split('/').pop();
+                    const displayName = fileName
+                        .replace('.html', '')
+                        .replace('_', ' at ');
+                    li.innerHTML = `<a href="posts/${fileName}">${displayName}</a>`;
+                    postList.appendChild(li);
+                });
+            } catch (error) {
+                console.error('Error loading posts:', error);
+                document.getElementById('postList').innerHTML = 
+                    '<li>Error loading posts. Please refresh the page.</li>';
+            }
+        }
     </script>
 </body>
 </html>
