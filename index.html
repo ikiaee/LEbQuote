@@ -7,6 +7,35 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Your existing head content -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- === ADD NAVIGATION BAR HERE === -->
+  <nav class="navbar">
+    <a href="/" class="nav-logo">LEbQuote</a>
+    <button class="nav-toggle">☰</button>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/posts">Archive</a>
+      <button class="theme-toggle" id="themeToggle">
+        <span class="theme-switch">
+          <input type="checkbox">
+          <span class="slider"></span>
+        </span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Your existing content -->
+  <div class="container">
+    ...
+  </div>
+</body>
+</html>
     <div class="container">
         <header>
             <h1>Learn English by Quote and Wisdom</h1>
@@ -23,5 +52,43 @@
             <p>© 2025 Learn English by Quote and Wisdom</p>
         </footer>
     </div>
+    <body>
+  <!-- Your content -->
+
+<!-- === ADD JAVASCRIPT HERE === -->
+  <script>
+    // Mobile menu toggle
+    document.querySelector('.nav-toggle').addEventListener('click', () => {
+      document.querySelector('.nav-links').classList.toggle('active');
+    });
+
+    // Dark mode toggle
+    const themeToggle = document.getElementById('themeToggle');
+    themeToggle.addEventListener('click', () => {
+      document.documentElement.setAttribute('data-theme', 
+        document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+    });
+
+    // Lazy loading
+    document.addEventListener("DOMContentLoaded", function() {
+      const lazyMedia = document.querySelectorAll(".lazy-load");
+      
+      const lazyLoad = target => {
+        target.classList.add("loaded");
+      };
+
+      const observer = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            lazyLoad(entry.target);
+            observer.unobserve(entry.target);
+          }
+        });
+      });
+
+      lazyMedia.forEach(media => observer.observe(media));
+    });
+  </script>
+</body>
 </body>
 </html>
