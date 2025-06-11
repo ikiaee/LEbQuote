@@ -22,38 +22,6 @@
   box-sizing: border-box;
   transition: background 0.3s, color 0.2s;
 }
-// Mobile menu toggle
-document.querySelector('.nav-toggle').addEventListener('click', () => {
-  document.querySelector('.nav-links').classList.toggle('active');
-});
-
-// Dark mode toggle
-const themeToggle = document.getElementById('themeToggle');
-themeToggle.addEventListener('click', () => {
-  document.documentElement.setAttribute('data-theme', 
-    document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
-});
-
-// Lazy loading
-document.addEventListener("DOMContentLoaded", function() {
-  const lazyMedia = document.querySelectorAll(".lazy-load");
-  
-  const lazyLoad = target => {
-    target.classList.add("loaded");
-  };
-
-  const observer = new IntersectionObserver((entries, observer) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        lazyLoad(entry.target);
-        observer.unobserve(entry.target);
-      }
-    });
-  });
-
-  lazyMedia.forEach(media => observer.observe(media));
-});
-
 body {
   font-family: Georgia, serif;
   line-height: 1.6;
