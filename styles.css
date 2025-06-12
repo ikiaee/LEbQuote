@@ -22,6 +22,7 @@
   box-sizing: border-box;
   transition: background 0.3s, color 0.2s;
 }
+
 body {
   font-family: Georgia, serif;
   line-height: 1.6;
@@ -39,44 +40,6 @@ body {
   overflow-x: hidden;
 }
 
-/* ===== NAVIGATION ===== */
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 0;
-  border-bottom: 1px solid var(--secondary-accent);
-}
-
-.nav-logo {
-  font-weight: bold;
-  color: var(--primary-accent);
-  text-decoration: none;
-  font-size: 1.2rem;
-}
-
-.nav-links {
-  display: flex;
-  gap: 1.5rem;
-}
-
-.nav-toggle {
-  display: none;
-  background: none;
-  border: none;
-  color: var(--text-color);
-  font-size: 1.5rem;
-  cursor: pointer;
-}
-
-.theme-toggle {
-  background: none;
-  border: none;
-  color: var(--text-color);
-  cursor: pointer;
-  font-size: 1.2rem;
-}
-
 /* ===== CONTENT SECTIONS ===== */
 .quote-section blockquote {
   border-left: 3px solid var(--primary-accent);
@@ -91,20 +54,45 @@ body {
   margin-top: 10px;
 }
 
-/* ===== QUIZ/VOCAB ===== */
-.quiz-box,
+/* ===== UNIFIED QUIZ SYSTEM ===== */
 .vocab-quiz {
-  background: var(--card-bg);
-  padding: 15px;
-  margin: 20px 0;
+  background: rgba(76, 175, 80, 0.05);
+  padding: 1.2rem;
+  margin: 1.5rem 0;
   border-radius: var(--border-radius);
   box-shadow: var(--shadow);
+  border-left: 3px solid var(--primary-accent);
 }
 
-.quiz-box h3,
 .vocab-quiz h3 {
-  margin-top: 0;
   color: var(--primary-accent);
+  margin: 0 0 0.8rem 0;
+  font-size: 1.1em;
+}
+
+.vocab-quiz ol {
+  padding-left: 1.8rem;
+  margin: 0.8rem 0;
+}
+
+.vocab-quiz li {
+  margin: 0.4rem 0;
+  padding: 0.4rem 0.6rem;
+  background: rgba(0,0,0,0.03);
+  border-radius: 3px;
+  transition: background 0.2s;
+}
+
+.vocab-quiz li:hover {
+  background: rgba(76, 175, 80, 0.08);
+}
+
+.vocab-quiz .answer {
+  font-weight: bold;
+  color: var(--primary-accent);
+  margin-top: 1rem;
+  padding-top: 0.8rem;
+  border-top: 1px dashed var(--secondary-accent);
 }
 
 /* ===== POEM SECTION ===== */
@@ -114,6 +102,11 @@ body {
   margin: 25px 0;
   border-left: 4px solid var(--primary-accent);
   box-shadow: var(--shadow);
+}
+
+.poem-box h3 {
+  margin-top: 0;
+  color: var(--primary-accent);
 }
 
 .poem-text p {
@@ -127,16 +120,11 @@ body {
   text-align: center;
 }
 
+.video-box iframe,
 .video-box video {
   max-width: 100%;
   border-radius: var(--border-radius);
   box-shadow: var(--shadow);
-}
-
-/* ===== MEDIA PLAYERS ===== */
-audio {
-  width: 100%;
-  margin: 15px 0;
 }
 
 /* ===== UTILITY CLASSES ===== */
@@ -148,101 +136,29 @@ audio {
   cursor: pointer;
 }
 
-.spoiler:hover,
-.spoiler:active {
+.spoiler:hover {
   color: var(--bg-color);
 }
 
-/* ===== IMAGE OPTIMIZATION ===== */
-img, video {
-  max-width: 100%;
-  height: auto;
-  display: block;
-}
-
-.lazy-load {
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.lazy-load.loaded {
-  opacity: 1;
-}
-
-/* ===== DARK MODE TOGGLE ===== */
-.theme-switch {
-  position: relative;
-  display: inline-block;
-  width: 60px;
-  height: 30px;
-}
-
-.theme-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  transition: .4s;
-  border-radius: 34px;
-}
-
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 22px;
-  width: 22px;
-  left: 4px;
-  bottom: 4px;
-  background-color: white;
-  transition: .4s;
-  border-radius: 50%;
-}
-
-input:checked + .slider {
-  background-color: var(--primary-accent);
-}
-
-input:checked + .slider:before {
-  transform: translateX(30px);
+/* ===== FOOTER ===== */
+footer {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--secondary-accent);
+  text-align: center;
+  font-size: 0.9em;
+  color: var(--secondary-accent);
 }
 
 /* ===== MOBILE RESPONSIVENESS ===== */
 @media (max-width: 768px) {
-  .nav-links {
-    display: none;
-    flex-direction: column;
-    position: absolute;
-    top: 60px;
-    right: 20px;
-    background: var(--card-bg);
+  .vocab-quiz {
     padding: 1rem;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
+    margin: 1.2rem 0;
   }
-
-  .nav-links.active {
-    display: flex;
-  }
-
-  .nav-toggle {
-    display: block;
-  }
-
-  .quiz-box ol {
-    padding-left: 20px;
-  }
-
-  .quiz-box li {
-    margin-bottom: 8px;
+  
+  .vocab-quiz ol {
+    padding-left: 1.5rem;
   }
 }
 
@@ -256,7 +172,7 @@ input:checked + .slider:before {
   }
 
   .poem-box, 
-  .quiz-box,
+  .vocab-quiz,
   .video-box {
     margin: 15px 0;
     padding: 12px;
