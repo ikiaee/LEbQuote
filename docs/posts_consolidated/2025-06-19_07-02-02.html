@@ -14,12 +14,14 @@
         </header>
 
         <main>
+            <!-- QUOTE_SECTION will be replaced with: -->
+            <section class="quote-section">
+                <h2>Quote of the Day</h2>
+                <blockquote>{{QUOTE_CONTENT}}</blockquote>
+                <p class="author">— {{AUTHOR}}</p>  <!-- ADDED HERE -->
+            </section>
             
-        <section class="quote-section">
-            <h2>Quote of the Day</h2>
-            <blockquote><strong>What other people may find in poetry or art</strong></blockquote>
-            <p class="author">— Unknown</p>
-        </section>
+            <!-- Other sections remain the same -->
             
             
             <section class="vocab-quiz">
@@ -55,17 +57,12 @@
                   <p>Beyond, red roofs about a narrow wharf</p>
                 <p class="poem-author">— Lord Alfred Tennyson</p>
             </div>
-        </section>
-            <!-- VIDEO_SECTION -->
+        </section> 
         </main>
 
         <footer>
-            
-        <footer>
-            <p>Archived from Telegram on 2025-06-19</p>
+            <p>Archived from Telegram on {{ARCHIVE_DATE}}</p>
             <p class="copyright">© 2025 Learn English by Quote and Wisdom</p>
-        </footer>
-            <p>© 2025 Learn English by Quote and Wisdom</p>
         </footer>
     </div>
 </body>
