@@ -186,3 +186,31 @@ footer {
     margin-top: 20px;
     text-align: center;
 }
+/* Media Player Styles */
+.media-section {
+    margin: 2rem 0;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.media-section h3 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+audio, video {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    display: block;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+    .media-section {
+        margin: 1.5rem 0;
+        padding: 0.5rem;
+    }
+}
