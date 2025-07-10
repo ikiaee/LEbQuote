@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily English Learning - June 15, 2025</title>
-    <link rel="stylesheet" href="/LEbQuote/styles2.css">
+    <title>Daily English Learning - {{DATE}}</title>
+    <link rel="stylesheet" href="../styles.css">
 </head>
 <body>
     <div class="container">
         <header>
             <h1>Daily English Learning</h1>
-            <p class="date">June 15, 2025</p>
+            <p class="date">{{DATE}}</p>
         </header>
 
         <main>
@@ -23,13 +23,33 @@
             
             <!-- Other sections remain the same -->
             <!-- MEDIA_SECTION -->
-            <!-- VOCAB_QUIZ_SECTION -->
-            <!-- POEM_SECTION --> 
+            
+        <section class="vocab-quiz">
+            <h3>Vocabulary Focus: knowledge</h3>
+            <p><strong>Definition:</strong> A significant connection</p>
+            <p>A. Unrelated meaning</p>
+<p>B. Opposite meaning</p>
+<p>C. Similar but incorrect</p>
+<p>D. A significant connection</p>
+        </section>
+            
+        <section class="poem-section">
+            <h2>Poem of the Day: Enoch Arden</h2>
+            <div class="poem-content">
+                <p>Long lines of cliff breaking have left a chasm;</p>
+                  <p>And in the chasm are foam and yellow sands;</p>
+                  <p>Beyond, red roofs about a narrow wharf</p>
+            </div>
+            <audio controls>
+                <source src="/LEbQuote/audio/poem_20250615.mp3" type="audio/mpeg">
+                Your browser does not support audio
+            </audio>
+        </section> 
         </main>
 
         <footer>
-            <p>Archived from Telegram on 2025-07-10</p>
-            <p class="copyright">© 2025 Learn English by Quote and Wisdom</p>
+            <p>Archived from Telegram on {{ARCHIVE_DATE}}</p>
+            <p class="copyright">© {{YEAR}} Learn English by Quote and Wisdom</p>
         </footer>
     </div>
 </body>
