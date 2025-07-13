@@ -23,9 +23,11 @@ jobs:
         shell: cmd
         run: |
           mkdir docs 2>nul
-          copy index.html docs\ >nul || echo "index.html missing"
-          copy styles2.css docs\ >nul || echo "styles2.css missing"
-          copy post_template2.html docs\ >nul || echo "template missing"
+          if exist index.html copy index.html docs\
+          if exist styles2.css copy styles2.css docs\
+          if exist post_template2.html copy post_template2.html docs\
+          echo Files in docs directory:
+          dir docs
       
       - uses: actions/upload-pages-artifact@v2
         with:
