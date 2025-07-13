@@ -14,15 +14,27 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
       - name: Setup Pages
         uses: actions/configure-pages@v3
-      - name: Build Pages
-        run: echo "No build needed for static site"
+        
+      - name: Prepare Deployment
+        run: |
+          # Create docs directory if it doesn't exist
+          mkdir -p docs
+          
+          # Copy necessary files to docs/
+          cp styles2.css post_template2.html docs/
+          
+          # Verify files exist
+          ls -la docs/
+        
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
-          path: .
+          path: 'docs/'
+          
       - name: Deploy to GitHub Pages
-        id: deployment
         uses: actions/deploy-pages@v2
