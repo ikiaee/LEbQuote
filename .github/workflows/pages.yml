@@ -3,7 +3,6 @@ name: Deploy GitHub Pages
 on:
   push:
     branches: ["main"]
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -24,17 +23,11 @@ jobs:
         shell: cmd
         run: |
           mkdir docs 2>nul
-          copy index.html docs\ >nul
-          copy styles2.css docs\ >nul
-          copy post_template2.html docs\ >nul
-          echo Files in docs:
-          dir docs
+          copy index.html docs\ >nul || echo "index.html missing"
+          copy styles2.css docs\ >nul || echo "styles2.css missing"
+          copy post_template2.html docs\ >nul || echo "template missing"
       
       - uses: actions/upload-pages-artifact@v2
-        with:
-          path: 'docs'
-      
-      - uses: actions/deploy-pages@v2
         with:
           path: 'docs'
       
