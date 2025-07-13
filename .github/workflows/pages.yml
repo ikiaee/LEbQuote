@@ -2,7 +2,7 @@ name: Deploy GitHub Pages
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 permissions:
@@ -12,29 +12,25 @@ permissions:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        
+      - uses: actions/checkout@v4
+      
       - name: Setup Pages
         uses: actions/configure-pages@v3
-        
-      - name: Prepare Deployment
+      
+      - name: Prepare Files
+        shell: cmd
         run: |
-          # Create docs directory if it doesn't exist
-          mkdir -p docs
-          
-          # Copy necessary files to docs/
-          cp styles2.css post_template2.html docs/
-          
-          # Verify files exist
-          ls -la docs/
-        
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+          mkdir docs 2>nul
+          if exist styles2.css copy styles2.css docs\
+          if exist post_template2.html copy post_template2.html docs\
+          echo Files copied to docs:
+          dir docs
+      
+      - uses: actions/upload-pages-artifact@v2
         with:
-          path: 'docs/'
-          
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v2
+          path: 'docs'
+      
+      - uses: actions/deploy-pages@v2
