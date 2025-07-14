@@ -5,6 +5,10 @@ on:
     branches: ["main"]
   workflow_dispatch:
 
+permissions:
+  pages: write
+  id-token: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -20,11 +24,15 @@ jobs:
       
       - name: Build
         run: |
-          mkdir -p docs
-          cp *.html *.css docs/ || echo "Some files missing"
-          ls -la docs/
+          mkdir -p public
+          cp *.html public/
+          cp *.css public/
+          echo "Copied files:"
+          ls -la public/
       
       - uses: actions/upload-pages-artifact@v2
+        with:
+          path: 'public'
       
       - uses: actions/deploy-pages@v2
         id: deployment
