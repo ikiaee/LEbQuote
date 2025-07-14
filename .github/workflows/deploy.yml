@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Nuclear Deployment Solution
 
 on:
   push:
@@ -8,6 +8,10 @@ on:
 permissions:
   pages: write
   id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
 
 jobs:
   deploy:
@@ -22,12 +26,12 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v3
       
-      - name: Build
+      - name: Nuclear Build
         run: |
+          rm -rf public || true
           mkdir -p public
-          cp *.html public/
-          cp *.css public/
-          echo "Copied files:"
+          find . -maxdepth 1 -type f \( -name "*.html" -o -name "*.css" \) -exec cp {} public/ \;
+          echo "DEPLOYMENT FILES:"
           ls -la public/
       
       - uses: actions/upload-pages-artifact@v2
