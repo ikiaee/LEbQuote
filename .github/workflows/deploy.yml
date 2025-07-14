@@ -1,0 +1,30 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+      
+      - name: Build
+        run: |
+          mkdir -p docs
+          cp *.html *.css docs/ || echo "Some files missing"
+          ls -la docs/
+      
+      - uses: actions/upload-pages-artifact@v2
+      
+      - uses: actions/deploy-pages@v2
+        id: deployment
