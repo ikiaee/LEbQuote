@@ -5,21 +5,25 @@ from datetime import datetime
 from pathlib import Path
 
 # ===== CONFIGURATION =====
-INPUT_JSON = r"C:\Users\kiaee\Desktop\1\ChatExport_2025-07-20\result.json"
+INPUT_JSON = "result.json"  # Now looks in same directory
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "output")
 QUOTES_DIR = os.path.join(OUTPUT_DIR, "quotes")
 POEMS_DIR = os.path.join(OUTPUT_DIR, "poems")
-MEDIA_DIR = os.path.join(OUTPUT_DIR, "media")  # New directory for videos/photos
+MEDIA_DIR = os.path.join(OUTPUT_DIR, "media")
+
+# Ensure output directories exist
+Path(QUOTES_DIR).mkdir(parents=True, exist_ok=True)
+Path(POEMS_DIR).mkdir(parents=True, exist_ok=True)
+Path(MEDIA_DIR).mkdir(parents=True, exist_ok=True)
 
 def flatten_text(msg_text):
-    """Convert Telegram's formatted text array into plain text"""
+    """Convert Telegram's formatted text array into plain text with preserved links"""
     if isinstance(msg_text, str):
         return msg_text
         
     plain_text = []
     for segment in msg_text:
         if isinstance(segment, dict):
-            # Handle author links when they appear as text entities
             if segment.get('type') == 'text_link':
                 plain_text.append(f"[{segment.get('text', '')}]({segment.get('href', '')})")
             else:
@@ -49,13 +53,9 @@ def is_poem_message(msg):
     text = flatten_text(msg.get('text', ''))
     return "Poem of the Day" in text or "poem" in text.lower()
 
-def is_media_message(msg):
-    """Check if message contains media (video/photo)"""
-    return msg.get('type') == 'message' and ('file' in msg or 'photo' in msg)
-
 def extract_quote_components(full_text):
-    """Extract quote, author, vocabulary and quiz from text"""
-    # Extract quote and author (with potential link)
+    """Extract quote components with author links"""
+    # Extract quote and author (with potential markdown link)
     quote_match = re.search(r'"(.*?)"(?:\s*—|\s*–)(.*?)(?:\n|$)', full_text)
     quote = quote_match.group(1).strip() if quote_match else ""
     
@@ -63,7 +63,9 @@ def extract_quote_components(full_text):
     author = quote_match.group(2).strip() if quote_match else "Unknown"
     author_link_match = re.search(r'\[(.*?)\]\((.*?)\)', author)
     if author_link_match:
-        author = f"[{author_link_match.group(1)}]({author_link_match.group(2)})"
+        author_name = author_link_match.group(1)
+        author_link = author_link_match.group(2)
+        author = f'<a href="{author_link}" target="_blank">{author_name}</a>'
     
     # Extract vocabulary
     vocab_match = re.search(r"Vocabulary Focus:\s*(.*?)\n(.*?)(?:\n\n|\nQuiz:|$)", full_text, re.DOTALL)
@@ -85,12 +87,11 @@ def extract_quote_components(full_text):
         "quiz": {
             "question": quiz_question,
             "answer": quiz_answer
-        },
-        "full_text": full_text
+        }
     }
 
 def extract_poem_components(full_text):
-    """Extract poem title and content"""
+    """Extract poem components"""
     clean_text = re.sub(r'^.*?Poem of the Day\s*\n', '', full_text, flags=re.DOTALL)
     
     title_match = re.match(r'^(.*?)\nby (.*?)\n', clean_text)
@@ -98,10 +99,12 @@ def extract_poem_components(full_text):
         title = title_match.group(1).strip()
         author = title_match.group(2).strip()
         
-        # Handle author links in poems
+        # Handle author links
         author_link_match = re.search(r'\[(.*?)\]\((.*?)\)', author)
         if author_link_match:
-            author = f"[{author_link_match.group(1)}]({author_link_match.group(2)})"
+            author_name = author_link_match.group(1)
+            author_link = author_link_match.group(2)
+            author = f'<a href="{author_link}" target="_blank">{author_name}</a>'
             
         content = clean_text[title_match.end():].strip()
     else:
@@ -115,44 +118,8 @@ def extract_poem_components(full_text):
         "content": content
     }
 
-def save_media(msg, date):
-    """Save video/photo messages to Markdown with media reference"""
-    media_type = "video" if 'file' in msg else "photo"
-    filename = f"{date}_{msg.get('id', '')}_{media_type}.md"
-    
-    # Generate media reference
-    media_content = ""
-    if media_type == "video":
-        media_content = f"""
-[Video: {msg.get('file_name', '')}]({msg.get('file', '')})
-Duration: {msg.get('duration_seconds', 0)} seconds
-Resolution: {msg.get('width', 0)}x{msg.get('height', 0)}
-"""
-    elif media_type == "photo":
-        media_content = f"""
-![Photo]({msg.get('photo', '')})
-Resolution: {msg.get('width', 0)}x{msg.get('height', 0)}
-"""
-    
-    # Generate Markdown content
-    md_content = f"""---
-title: "{msg.get('text', 'Media Content')[:50]}..."
-date: {date}
-media_type: {media_type}
----
-
-{flatten_text(msg.get('text', ''))}
-
-{media_content}
-
-[View original](https://t.me/c/{msg.get('from_id', '').replace('channel', '')}/{msg.get('id', '')})
-"""
-    with open(os.path.join(MEDIA_DIR, filename), 'w', encoding='utf-8') as f:
-        f.write(md_content)
-    return True
-
 def save_quote(msg, date):
-    """Save quote message to Markdown file"""
+    """Save quote as properly formatted HTML"""
     full_text = flatten_text(msg.get('text', ''))
     data = extract_quote_components(full_text)
     
@@ -161,38 +128,54 @@ def save_quote(msg, date):
         
     # Create safe filename
     safe_author = re.sub(r'[^\w\s-]', '', data['author']).strip()
-    filename = f"{date}_{safe_author[:50]}.md"
+    filename = f"{date}_{safe_author[:50]}.html"
     
-    # Generate Markdown content
-    md_content = f"""---
-title: "{data['quote'][:50]}..."
-date: {date}
-author: "{data['author']}"
----
-
-> {data['quote']}
-> — {data['author']}
-
-## Vocabulary
-**{data['vocabulary']['word']}**  
-{data['vocabulary']['definition']}
-
-## Quiz
-{data['quiz']['question']}
-
-<details>
-<summary>Answer</summary>
-{data['quiz']['answer']}
-</details>
-
-[View original](https://t.me/c/{msg.get('from_id', '').replace('channel', '')}/{msg.get('id', '')})
-"""
+    # Generate HTML content
+    html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+    <title>Quote: {data['quote'][:50]}...</title>
+    <link rel="stylesheet" href="/styles2.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Quote of the Day</h1>
+        
+        <div class="quote-box">
+            <blockquote>"{data['quote']}"</blockquote>
+            <div class="author">— {data['author']}</div>
+        </div>
+        
+        <div class="vocab-section">
+            <h2>Vocabulary Focus</h2>
+            <p><strong>{data['vocabulary']['word']}</strong><br>
+            {data['vocabulary']['definition']}</p>
+        </div>
+        
+        <div class="quiz-section">
+            <h2>Quiz</h2>
+            <p>What does {data['vocabulary']['word']} mean?</p>
+            {data['quiz']['question']}
+            <details>
+                <summary>Show Answer</summary>
+                <div class="answer">{data['quiz']['answer']}</div>
+            </details>
+        </div>
+        
+        <div class="historical-note">
+            Originally posted on {date} • 
+            <a href="https://t.me/c/{msg.get('from_id', '').replace('channel', '')}/{msg.get('id', '')}" target="_blank">View original</a>
+        </div>
+    </div>
+</body>
+</html>"""
+    
     with open(os.path.join(QUOTES_DIR, filename), 'w', encoding='utf-8') as f:
-        f.write(md_content)
+        f.write(html_content)
     return True
 
 def save_poem(msg, date):
-    """Save poem message to Markdown file"""
+    """Save poem as properly formatted HTML with audio"""
     full_text = flatten_text(msg.get('text', ''))
     data = extract_poem_components(full_text)
     
@@ -201,35 +184,42 @@ def save_poem(msg, date):
         
     # Create safe filename
     safe_title = re.sub(r'[^\w\s-]', '', data['title']).strip()
-    filename = f"{date}_{safe_title[:50]}.md"
+    filename = f"{date}_{safe_title[:50]}.html"
     
-    # Generate Markdown content
-    md_content = f"""---
-title: "{data['title']}"
-date: {date}
-author: "{data['author']}"
----
-
-{data['content']}
-
-[View original](https://t.me/c/{msg.get('from_id', '').replace('channel', '')}/{msg.get('id', '')})
-"""
-    # Handle media files
-    if 'file' in msg:  # Audio
-        md_content += f"\n\n[Audio: {msg.get('file_name', '')}]({msg.get('file', '')})"
-    elif 'photo' in msg:  # Photo
-        md_content += f"\n\n![Photo]({msg.get('photo', '')})"
+    # Generate HTML content
+    html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+    <title>Poem: {data['title']}</title>
+    <link rel="stylesheet" href="/styles2.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Poem of the Day</h1>
+        
+        <div class="poem-box">
+            <h2>{data['title']}</h2>
+            <div class="poem-author">by {data['author']}</div>
+            <div class="poem-text">
+                {data['content']}
+            </div>
+        </div>
+        
+        {'<div class="media-section"><h2>Audio Version</h2><audio controls><source src="'+msg.get('file', '')+'" type="audio/mpeg">Your browser does not support audio</audio></div>' if 'file' in msg else ''}
+        
+        <div class="historical-note">
+            Originally posted on {date} • 
+            <a href="https://t.me/c/{msg.get('from_id', '').replace('channel', '')}/{msg.get('id', '')}" target="_blank">View original</a>
+        </div>
+    </div>
+</body>
+</html>"""
     
     with open(os.path.join(POEMS_DIR, filename), 'w', encoding='utf-8') as f:
-        f.write(md_content)
+        f.write(html_content)
     return True
 
 def main():
-    # Create output folders
-    Path(QUOTES_DIR).mkdir(parents=True, exist_ok=True)
-    Path(POEMS_DIR).mkdir(parents=True, exist_ok=True)
-    Path(MEDIA_DIR).mkdir(parents=True, exist_ok=True)  # New media folder
-
     try:
         with open(INPUT_JSON, 'r', encoding='utf-8') as f:
             data = json.load(f)
@@ -239,8 +229,6 @@ def main():
 
     quote_count = 0
     poem_count = 0
-    media_count = 0
-    total_messages = len(data.get('messages', []))
     
     for msg in data.get('messages', []):
         date_str = msg.get('date', '')
@@ -256,9 +244,6 @@ def main():
             elif is_poem_message(msg):
                 if save_poem(msg, date):
                     poem_count += 1
-            elif is_media_message(msg):
-                if save_media(msg, date):
-                    media_count += 1
                     
         except Exception as e:
             print(f"⚠️ Error processing message {msg.get('id')}: {e}")
@@ -266,11 +251,9 @@ def main():
     print(f"\n📊 Processing Complete:")
     print(f"✅ Quotes saved: {quote_count}")
     print(f"✅ Poems saved: {poem_count}")
-    print(f"✅ Media files saved: {media_count}")
     print(f"📂 Output folders:")
     print(f"   - Quotes: {os.path.abspath(QUOTES_DIR)}")
     print(f"   - Poems: {os.path.abspath(POEMS_DIR)}")
-    print(f"   - Media: {os.path.abspath(MEDIA_DIR)}")
 
 if __name__ == "__main__":
     main()
