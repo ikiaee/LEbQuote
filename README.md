@@ -1,3 +1,3 @@
-# LEbQuote
-Learn English by Quote and Wisdom. #LEbWis
-Follow Us at telegram: t.me/LEbQuote 
+# LEbQuote Export Processor 
+ECHO is on.
+"Processed: 57 quotes, 142 poems, 15 media files" 

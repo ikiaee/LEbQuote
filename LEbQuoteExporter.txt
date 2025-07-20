@@ -1,0 +1,8 @@
+
+@LEbQuoteExportBot
+ 
+Bot name: LEbQuote Exporter
+
+Username: LEbQuoteExportBot (must end with bot)
+
+bot token = 7941102461:AAEhKerwX119YwSBck0yxpDEYdzuO6wEnqw

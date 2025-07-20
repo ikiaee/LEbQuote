@@ -1,0 +1,4 @@
+
+Processed 15 vocabulary posts
+Verification command:
+findstr /S /C:"vocab-quiz" docs\posts\*.html | find /c ":"
