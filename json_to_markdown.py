@@ -4,11 +4,11 @@ import re
 from datetime import datetime
 from pathlib import Path
 
-BASE_URL = "/LEbQuote/"  # ← Add this line
+BASE_URL = "/LEbQuote/"
 
 # ===== CONFIGURATION =====
 INPUT_JSON = "result.json"  # Now looks in same directory
-OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "output")
+OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "docs")
 QUOTES_DIR = os.path.join(OUTPUT_DIR, "quotes")
 POEMS_DIR = os.path.join(OUTPUT_DIR, "poems")
 MEDIA_DIR = os.path.join(OUTPUT_DIR, "media")
@@ -137,7 +137,7 @@ def save_quote(msg, date):
 <html>
 <head>
     <title>Quote: {data['quote'][:50]}...</title>
-    <link rel="stylesheet" href="styles2.css">
+    <link rel="stylesheet" href="{BASE_URL}styles2.css">
 </head>
 <body>
     <div class="container">
@@ -189,7 +189,7 @@ def save_poem(msg, date):
     # Generate media HTML (fixed version)
     media_html = ''
     if 'file' in msg:
-        audio_path = msg.get('file', '').replace('audio/', 'media_files/')
+        audio_path = f"/LEbQuote/media_files/{os.path.basename(msg.get('file', ''))}"
         media_html = f'''
         <div class="media-section">
             <h2>Audio Version</h2>
@@ -204,7 +204,7 @@ def save_poem(msg, date):
 <html>
 <head>
     <title>Poem: {data['title']}</title>
-    <link rel="stylesheet" href="styles2.css">
+    <link rel="stylesheet" href="{BASE_URL}styles2.css">
 </head>
 <body>
     <div class="container">
