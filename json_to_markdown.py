@@ -137,7 +137,7 @@ def save_quote(msg, date):
 <html>
 <head>
     <title>Quote: {data['quote'][:50]}...</title>
-    <link rel="stylesheet" href="{BASE_URL}styles2.css">
+    <link rel="stylesheet" href="styles2.css">
 </head>
 <body>
     <div class="container">
@@ -177,23 +177,34 @@ def save_quote(msg, date):
     return True
 
 def save_poem(msg, date):
-    """Save poem as properly formatted HTML with audio"""
     full_text = flatten_text(msg.get('text', ''))
     data = extract_poem_components(full_text)
 
     if not data['content']:
         return False
 
-    # Create safe filename
     safe_title = re.sub(r'[^\w\s-]', '', data['title']).strip()
     filename = f"{date}_{safe_title[:50]}.html"
 
-    # Generate HTML content
+    # Generate media HTML (fixed version)
+    media_html = ''
+    if 'file' in msg:
+        audio_path = msg.get('file', '').replace('audio/', 'media_files/')
+        media_html = f'''
+        <div class="media-section">
+            <h2>Audio Version</h2>
+            <audio controls>
+                <source src="{audio_path}" type="audio/mpeg">
+                Your browser does not support audio
+            </audio>
+            <p><a href="{audio_path}" download>Download Audio</a></p>
+        </div>'''
+
     html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <title>Poem: {data['title']}</title>
-    <link rel="stylesheet" href="{BASE_URL}styles2.css">
+    <link rel="stylesheet" href="styles2.css">
 </head>
 <body>
     <div class="container">
@@ -207,7 +218,7 @@ def save_poem(msg, date):
             </div>
         </div>
 
-        '<div class="media-section"><h2>Audio Version</h2><audio controls><source src="{BASE_URL}{msg.get('file', '')}" type="audio/mpeg">Your browser does not support audio</audio></div>'
+        {media_html}
 
         <div class="historical-note">
             Originally posted on {date} •
