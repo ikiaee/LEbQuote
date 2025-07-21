@@ -1,0 +1,251 @@
+/* ===== BASE STYLES ===== */
+:root {
+  --text-color: #333;
+  --bg-color: #fff;
+  --primary-accent: #4CAF50;
+  --secondary-accent: #6c757d;
+  --card-bg: #f8f9fa;
+  --border-radius: 8px;
+  --shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+[data-theme="dark"] {
+  --text-color: #f0f0f0;
+  --bg-color: #121212;
+  --card-bg: #1e1e1e;
+  --primary-accent: #81C784;
+  --secondary-accent: #9e9e9e;
+  --shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+* {
+  box-sizing: border-box;
+  transition: background 0.3s, color 0.2s;
+}
+
+body {
+  font-family: Georgia, serif;
+  line-height: 1.6;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  color: var(--text-color);
+  background: var(--bg-color);
+  font-size: clamp(16px, 2vw, 18px);
+}
+
+/* ===== LAYOUT ===== */
+.container {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* ===== CONTENT SECTIONS ===== */
+.quote-section blockquote {
+  border-left: 3px solid var(--primary-accent);
+  padding-left: 15px;
+  font-style: italic;
+  margin: 20px 0;
+}
+
+.quote-section .author {
+  font-weight: bold;
+  text-align: right;
+  margin-top: 10px;
+}
+
+/* ===== UNIFIED QUIZ SYSTEM ===== */
+.vocab-quiz {
+  background: rgba(76, 175, 80, 0.05);
+  padding: 1.2rem;
+  margin: 1.5rem 0;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  border-left: 3px solid var(--primary-accent);
+}
+
+.vocab-quiz h3 {
+  color: var(--primary-accent);
+  margin: 0 0 0.8rem 0;
+  font-size: 1.1em;
+}
+
+.vocab-quiz ol {
+  padding-left: 1.8rem;
+  margin: 0.8rem 0;
+}
+
+.vocab-quiz li {
+  margin: 0.4rem 0;
+  padding: 0.4rem 0.6rem;
+  background: rgba(0,0,0,0.03);
+  border-radius: 3px;
+  transition: background 0.2s;
+}
+
+.vocab-quiz li:hover {
+  background: rgba(76, 175, 80, 0.08);
+}
+
+.vocab-quiz .answer {
+  font-weight: bold;
+  color: var(--primary-accent);
+  margin-top: 1rem;
+  padding-top: 0.8rem;
+  border-top: 1px dashed var(--secondary-accent);
+}
+
+/* ===== POEM SECTION ===== */
+.poem-box {
+  background: var(--card-bg);
+  padding: 20px;
+  margin: 25px 0;
+  border-left: 4px solid var(--primary-accent);
+  box-shadow: var(--shadow);
+}
+
+.poem-box h3 {
+  margin-top: 0;
+  color: var(--primary-accent);
+}
+
+.poem-text p {
+  margin: 8px 0;
+  line-height: 1.6;
+}
+
+/* ===== VIDEO SECTION ===== */
+.video-box {
+  margin: 30px 0;
+  text-align: center;
+}
+
+.video-box iframe,
+.video-box video {
+  max-width: 100%;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+}
+
+/* ===== UTILITY CLASSES ===== */
+.spoiler {
+  background: var(--text-color);
+  color: var(--text-color);
+  padding: 2px 5px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.spoiler:hover {
+  color: var(--bg-color);
+}
+
+/* ===== FOOTER ===== */
+footer {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--secondary-accent);
+  text-align: center;
+  font-size: 0.9em;
+  color: var(--secondary-accent);
+}
+
+/* ===== MOBILE RESPONSIVENESS ===== */
+@media (max-width: 768px) {
+  .vocab-quiz {
+    padding: 1rem;
+    margin: 1.2rem 0;
+  }
+  
+  .vocab-quiz ol {
+    padding-left: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 10px;
+  }
+
+  .container {
+    padding: 0 10px;
+  }
+
+  .poem-box, 
+  .vocab-quiz,
+  .video-box {
+    margin: 15px 0;
+    padding: 12px;
+  }
+}
+.historical-note {
+    font-size: 0.9em;
+    color: #777;
+    border-top: 1px dashed #ddd;
+    padding-top: 10px;
+    margin-top: 20px;
+    text-align: center;
+}
+/* Media Player Styles */
+.media-section {
+    margin: 2rem 0;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.media-section h3 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+audio, video {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    display: block;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+    .media-section {
+        margin: 1.5rem 0;
+        padding: 0.5rem;
+    }
+}  /* THIS WAS MISSING */
+
+.post-list {
+  list-style: none;
+  padding: 0;
+}
+
+.post-list li {
+  margin-bottom: 1.5rem;
+}
+
+.post-list a {
+  display: block;
+  padding: 1.5rem;
+  background: var(--card-bg);
+  border-left: 4px solid var(--primary-accent);
+  text-decoration: none;
+  color: var(--text-color);
+  transition: transform 0.3s;
+}
+
+.post-list a:hover {
+  transform: translateX(5px);
+}
+
+.timestamp {
+  color: var(--secondary-accent);
+  font-size: 0.9em;
+  margin-bottom: 0.5rem;
+}
+
+/* REVERSE ORDER STYLES */
+.post-list {
+  display: flex;
+  flex-direction: column-reverse; /* Changed to column-reverse */
+}
