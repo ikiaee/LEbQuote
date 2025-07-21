@@ -1,6 +1,48 @@
-<!DOCTYPE html> 
-<html><head><title>LEbQuote Archive</title><style>body{font-family:sans-serif;max-width:800px;margin:0 auto;padding:20px}</style></head><body><h1>?? LEbQuote Archive</h1><ul style="font-size:1.2em"> 
-<li><a href="quotes/" style="text-decoration:none;color:#0066cc">?? Quotes (57)</a></li> 
-<li><a href="poems/" style="text-decoration:none;color:#0066cc">?? Poems (142)</a></li> 
-<li><a href="media/" style="text-decoration:none;color:#0066cc">?? Media (15)</a></li> 
-</ul></body></html> 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LEbQuote Archive</title>
+    <base href="/LEbQuote/">
+    <link rel="stylesheet" href="styles2.css">
+    <!-- ADD THIS STYLE FOR REVERSE ORDER -->
+    <style>
+    .post-list {
+        display: flex;
+        flex-direction: column-reverse; /* CHANGED TO REVERSE */
+    }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="archive-header">
+            <h1>LEbQuote Archive</h1>
+            <p>Total posts: <span id="post-count">65</span></p>
+        </header>
+        <main>
+            <ul class="post-list">
+                <!-- List items remain the same but will display in reverse -->
+                <li><a href="posts_consolidated/2025-07-15_00-00-00.html">...</a></li>
+                <!-- ... other list items ... -->
+            </ul>
+        </main>
+        <footer>
+            <p>Last updated: <span id="current-date"></span></p>
+        </footer>
+    </div>
+
+    <!-- ADD THIS SCRIPT AT THE BOTTOM -->
+    <script>
+    // Reverse order fallback for older browsers
+    if (!CSS.supports('flex-direction: column-reverse')) {
+        const list = document.querySelector('.post-list');
+        const items = Array.from(list.children);
+        items.reverse().forEach(item => list.appendChild(item));
+    }
+    
+    // Update date
+    document.getElementById('current-date').textContent = new Date().toLocaleDateString();
+    </script>
+</body>
+</html>

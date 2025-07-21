@@ -213,4 +213,39 @@ audio, video {
         margin: 1.5rem 0;
         padding: 0.5rem;
     }
+}  /* THIS WAS MISSING */
+
+.post-list {
+  list-style: none;
+  padding: 0;
+}
+
+.post-list li {
+  margin-bottom: 1.5rem;
+}
+
+.post-list a {
+  display: block;
+  padding: 1.5rem;
+  background: var(--card-bg);
+  border-left: 4px solid var(--primary-accent);
+  text-decoration: none;
+  color: var(--text-color);
+  transition: transform 0.3s;
+}
+
+.post-list a:hover {
+  transform: translateX(5px);
+}
+
+.timestamp {
+  color: var(--secondary-accent);
+  font-size: 0.9em;
+  margin-bottom: 0.5rem;
+}
+
+/* REVERSE ORDER STYLES */
+.post-list {
+  display: flex;
+  flex-direction: column-reverse; /* Changed to column-reverse */
 }
