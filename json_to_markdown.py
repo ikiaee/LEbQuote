@@ -231,6 +231,48 @@ def save_poem(msg, date):
     with open(os.path.join(POEMS_DIR, filename), 'w', encoding='utf-8') as f:
         f.write(html_content)
     return True
+def generate_index(quotes, poems):
+    post_links = []
+
+    # Process quotes
+    for quote_file in os.listdir(QUOTES_DIR):
+        if quote_file.endswith('.html'):
+            date = quote_file.split('_')[0]
+            post_links.append((date, f"quotes/{quote_file}", "Quote"))
+
+    # Process poems
+    for poem_file in os.listdir(POEMS_DIR):
+        if poem_file.endswith('.html'):
+            date = poem_file.split('_')[0]
+            post_links.append((date, f"poems/{poem_file}", "Poem"))
+
+    # Sort by date (newest first)
+    post_links.sort(reverse=True, key=lambda x: x[0])
+
+    # Generate HTML list items
+    list_items = []
+    for date, path, post_type in post_links:
+        list_items.append(f"""
+        <li>
+            <a href="{path}">
+                <span class="timestamp">{date}</span>
+                <span class="post-type">{post_type}</span>
+            </a>
+        </li>
+        """)
+
+    # Update index.html
+    index_path = os.path.join(OUTPUT_DIR, 'index.html')
+    with open(index_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+
+    updated_content = content.replace(
+        '<!-- List items remain the same but will display in reverse -->',
+        '\n'.join(list_items)
+    )
+
+    with open(index_path, 'w', encoding='utf-8') as f:
+        f.write(updated_content)
 
 def main():
     try:
@@ -260,6 +302,8 @@ def main():
 
         except Exception as e:
             print(f"⚠️ Error processing message {msg.get('id')}: {e}")
+
+    generate_index(quote_count, poem_count)
 
     print(f"\n📊 Processing Complete:")
     print(f"✅ Quotes saved: {quote_count}")
