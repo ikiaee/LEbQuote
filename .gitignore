@@ -1,4 +1,5 @@
-".env" 
-"env.txt" 
-"complete_bot_backup.py" 
-"FETCH_HEAD" 
+.env
+env.txt
+complete_bot_backup.py
+FETCH_HEAD
+replacements.txt
