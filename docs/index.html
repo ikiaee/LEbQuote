@@ -39,7 +39,7 @@
     <div class="container">
         <header class="archive-header">
             <h1>LEbQuote Archive</h1>
-            <p>Total posts: <span id="post-count">65</span></p>
+            <script>document.getElementById('post-count').textContent = document.querySelectorAll('.post-list li').length;</script>
         </header>
 
         <main>
