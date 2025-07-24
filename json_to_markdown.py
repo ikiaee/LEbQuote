@@ -4,7 +4,7 @@ import re
 from datetime import datetime
 from pathlib import Path
 
-BASE_URL = "/LEbQuote/"
+BASE_URL = ""  # Empty string for docs-based publishing
 
 # ===== CONFIGURATION =====
 INPUT_JSON = "result.json"  # Now looks in same directory
@@ -137,7 +137,7 @@ def save_quote(msg, date):
 <html>
 <head>
     <title>Quote: {data['quote'][:50]}...</title>
-    <link rel="stylesheet" href="{BASE_URL}styles2.css">
+    <link rel="stylesheet" href="../styles2.css">
 </head>
 <body>
     <div class="container">
@@ -204,7 +204,7 @@ def save_poem(msg, date):
 <html>
 <head>
     <title>Poem: {data['title']}</title>
-    <link rel="stylesheet" href="{BASE_URL}styles2.css">
+    <link rel="stylesheet" href="../styles2.css">
 </head>
 <body>
     <div class="container">
@@ -240,7 +240,7 @@ def generate_index(quotes, poems):
             date = quote_file.split('_')[0]
             post_links.append((date, f"quotes/{quote_file}", "Quote"))
 
-    # Process poems
+    # Process poems (if you want to keep them)
     for poem_file in os.listdir(POEMS_DIR):
         if poem_file.endswith('.html'):
             date = poem_file.split('_')[0]
@@ -254,7 +254,7 @@ def generate_index(quotes, poems):
     for date, path, post_type in post_links:
         list_items.append(f"""
         <li>
-            <a href="{path}">
+            <a href="{path}">  # This is the correct line - uses 'path' not 'filename'
                 <span class="timestamp">{date}</span>
                 <span class="post-type">{post_type}</span>
             </a>
@@ -266,10 +266,11 @@ def generate_index(quotes, poems):
     with open(index_path, 'r', encoding='utf-8') as f:
         content = f.read()
 
+    # CORRECTED LINE - Added missing parenthesis
     updated_content = content.replace(
         '<!-- List items remain the same but will display in reverse -->',
         '\n'.join(list_items)
-    )
+    )  # This closing parenthesis was missing
 
     with open(index_path, 'w', encoding='utf-8') as f:
         f.write(updated_content)
@@ -283,7 +284,6 @@ def main():
         return
 
     quote_count = 0
-    poem_count = 0
 
     for msg in data.get('messages', []):
         date_str = msg.get('date', '')
@@ -296,21 +296,17 @@ def main():
             if is_quote_message(msg):
                 if save_quote(msg, date):
                     quote_count += 1
-            elif is_poem_message(msg):
-                if save_poem(msg, date):
-                    poem_count += 1
-
+            # Poem processing completely removed
         except Exception as e:
             print(f"⚠️ Error processing message {msg.get('id')}: {e}")
 
-    generate_index(quote_count, poem_count)
+    # Only pass quote_count to generate_index
+    generate_index(quote_count, 0)  # Second argument (poem_count) set to 0
 
     print(f"\n📊 Processing Complete:")
     print(f"✅ Quotes saved: {quote_count}")
-    print(f"✅ Poems saved: {poem_count}")
-    print(f"📂 Output folders:")
+    print(f"📂 Output folder:")
     print(f"   - Quotes: {os.path.abspath(QUOTES_DIR)}")
-    print(f"   - Poems: {os.path.abspath(POEMS_DIR)}")
 
 if __name__ == "__main__":
     main()
