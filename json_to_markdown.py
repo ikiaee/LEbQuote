@@ -57,40 +57,45 @@ def is_poem_message(msg):
 
 def extract_quote_components(full_text):
     """Extract quote components with author links"""
-    # Extract quote and author (with potential markdown link)
-    quote_match = re.search(r'"(.*?)"(?:\s*—|\s*–)(.*?)(?:\n|$)', full_text)
-    quote = quote_match.group(1).strip() if quote_match else ""
+    components = {
+        "quote": "",
+        "author": "Unknown",
+        "vocabulary": {
+            "word": "",
+            "definition": ""
+        },
+        "quiz": {
+            "question": "",
+            "answer": ""
+        }
+    }
 
-    # Handle author with potential markdown link
-    author = quote_match.group(2).strip() if quote_match else "Unknown"
-    author_link_match = re.search(r'\[(.*?)\]\((.*?)\)', author)
-    if author_link_match:
-        author_name = author_link_match.group(1)
-        author_link = author_link_match.group(2)
-        author = f'<a href="{author_link}" target="_blank">{author_name}</a>'
+    # Extract quote and author
+    quote_match = re.search(r'"(.*?)"(?:\s*—|\s*–)(.*?)(?:\n|$)', full_text)
+    if quote_match:
+        components["quote"] = quote_match.group(1).strip()
+        author = quote_match.group(2).strip()
+
+        # Handle author links
+        author_link_match = re.search(r'\[(.*?)\]\((.*?)\)', author)
+        if author_link_match:
+            components["author"] = f'<a href="{author_link_match.group(2)}">{author_link_match.group(1)}</a>'
+        else:
+            components["author"] = author
 
     # Extract vocabulary
     vocab_match = re.search(r"Vocabulary Focus:\s*(.*?)\n(.*?)(?:\n\n|\nQuiz:|$)", full_text, re.DOTALL)
-    vocab_word = vocab_match.group(1).strip() if vocab_match else ""
-    vocab_def = vocab_match.group(2).strip() if vocab_match else ""
+    if vocab_match:
+        components["vocabulary"]["word"] = vocab_match.group(1).strip()
+        components["vocabulary"]["definition"] = vocab_match.group(2).strip()
 
     # Extract quiz
     quiz_match = re.search(r"What does (.*?) mean\?(.*?)Answer:\s*(.*?)(?:\n|$)", full_text, re.DOTALL)
-    quiz_question = quiz_match.group(2).strip() if quiz_match else ""
-    quiz_answer = quiz_match.group(3).strip() if quiz_match else ""
+    if quiz_match:
+        components["quiz"]["question"] = quiz_match.group(2).strip()
+        components["quiz"]["answer"] = quiz_match.group(3).strip()
 
-    return {
-        "quote": quote,
-        "author": author,
-        "vocabulary": {
-            "word": vocab_word,
-            "definition": vocab_def
-        },
-        "quiz": {
-            "question": quiz_question,
-            "answer": quiz_answer
-        }
-    }
+    return components
 
 def extract_poem_components(full_text):
     """Extract poem components"""
@@ -129,8 +134,37 @@ def save_quote(msg, date):
         return False
 
     # Create safe filename
-    safe_author = re.sub(r'[^\w\s-]', '', data['author']).strip()
+    safe_author = re.sub(r'[^\w\s-]', '', data['author']).strip().replace(" ", "_")
     filename = f"{date}_{safe_author[:50]}.html"
+
+    # Generate vocabulary section
+    vocab_html = ""
+    if data['vocabulary']['word']:
+        vocab_html = f"""
+        <div class="vocab-section">
+            <h2>Vocabulary Focus</h2>
+            <p><strong>{data['vocabulary']['word']}</strong><br>
+            {data['vocabulary']['definition']}</p>
+        </div>
+        """
+
+    # Generate quiz section
+    quiz_html = ""
+    if data['quiz']['question'] and data['vocabulary']['word']:
+        options = [opt.strip() for opt in data['quiz']['question'].split(";") if opt.strip()]
+        quiz_html = f"""
+        <div class="quiz-section">
+            <h2>Quiz</h2>
+            <p>What does {data['vocabulary']['word']} mean?</p>
+            <div class="options">
+                {"".join([f'<div>{opt}</div>' for opt in options])}
+            </div>
+            <details>
+                <summary>Show Answer</summary>
+                <p>{data['quiz']['answer']}</p>
+            </details>
+        </div>
+        """
 
     # Generate HTML content
     html_content = f"""<!DOCTYPE html>
@@ -148,26 +182,8 @@ def save_quote(msg, date):
             <div class="author">— {data['author']}</div>
         </div>
 
-        <div class="vocab-section">
-            <h2>Vocabulary Focus</h2>
-            <p><strong>{data['vocabulary']['word']}</strong><br>
-            {data['vocabulary']['definition']}</p>
-        </div>
-
-        <div class="quiz-section">
-            <h2>Quiz</h2>
-            <p>What does {data['vocabulary']['word']} mean?</p>
-            {data['quiz']['question']}
-            <details>
-                <summary>Show Answer</summary>
-                <div class="answer">{data['quiz']['answer']}</div>
-            </details>
-        </div>
-
-        <div class="historical-note">
-            Originally posted on {date} •
-            <a href="https://t.me/c/{msg.get('from_id', '').replace('channel', '')}/{msg.get('id', '')}" target="_blank">View original</a>
-        </div>
+        {vocab_html}
+        {quiz_html}
     </div>
 </body>
 </html>"""
@@ -220,10 +236,6 @@ def save_poem(msg, date):
 
         {media_html}
 
-        <div class="historical-note">
-            Originally posted on {date} •
-            <a href="https://t.me/c/{msg.get('from_id', '').replace('channel', '')}/{msg.get('id', '')}" target="_blank">View original</a>
-        </div>
     </div>
 </body>
 </html>"""
@@ -247,7 +259,7 @@ def generate_index(quotes, poems):
             post_links.append((date, f"poems/{poem_file}", "Poem"))
 
     # Sort by date (newest first)
-    post_links.sort(reverse=True, key=lambda x: x[0])
+    post_links.sort(key=lambda x: x[0])
 
     # Generate HTML list items
     list_items = []
