@@ -279,3 +279,15 @@ footer {
     color: #777;
     font-size: 0.9em;
 }
+.options div {
+    margin: 5px 0;
+    padding-left: 20px;
+}
+
+.author a {
+    color: #0066cc;
+    text-decoration: none;
+}
+.author a:hover {
+    text-decoration: underline;
+}
