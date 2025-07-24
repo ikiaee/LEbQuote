@@ -1,26 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- METADATA - Replace entire head section -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Archive of inspirational quotes from LEbQuote">
     <title>LEbQuote Archive</title>
-    <link rel="stylesheet" href="styles2.css"> 
-    <!-- ADD THIS STYLE FOR REVERSE ORDER -->
+    <link rel="stylesheet" href="styles2.css">
+    <link rel="icon" href="data:;base64,iVBORw0KGgo="> <!-- Prevents favicon 404 errors -->
+    
+    <!-- IN-PAGE STYLES - Add before </head> -->
     <style>
     .post-list {
         display: flex;
-        flex-direction: column-reverse; /* CHANGED TO REVERSE */
+        flex-direction: column-reverse;
+        list-style: none;
+        padding: 0;
+    }
+    .post-list a {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        padding: 8px 4px;
+        border-radius: 4px;
+    }
+    .post-list a:hover {
+        background: #f5f5f5;
+    }
+    .timestamp {
+        display: inline-block;
+        width: 100px;
+        color: #666;
     }
     </style>
 </head>
 <body>
+    <!-- PAGE STRUCTURE - Keep your existing content between <body> tags -->
     <div class="container">
         <header class="archive-header">
             <h1>LEbQuote Archive</h1>
             <p>Total posts: <span id="post-count">65</span></p>
         </header>
+
         <main>
-            <ul class="post-list">
+            <!-- NAV WRAPPER - Wrap your existing <ul> with this -->
+            <nav aria-label="Quote archive">
+                <ul class="post-list" role="list">
                 
         <li>
             <a href="quotes/2025-07-20_Zig Ziglar.html">
@@ -476,10 +501,10 @@
                 <span class="post-type">Quote</span>
             </a>
         </li>
-               
-                <!-- ... other list items ... -->
-            </ul>
+                </ul>
+            </nav>
         </main>
+
         <footer>
             <p>Last updated: <span id="current-date"></span></p>
         </footer>
@@ -496,6 +521,18 @@
     
     // Update date
     document.getElementById('current-date').textContent = new Date().toLocaleDateString();
+     <script>
+    // Reverse order fallback
+    if (!CSS.supports('flex-direction: column-reverse')) {
+        const list = document.querySelector('.post-list');
+        const items = Array.from(list.children);
+        items.reverse().forEach(item => list.appendChild(item));
+    }
+    
+    // Dynamic date/count
+    document.getElementById('current-date').textContent = new Date().toLocaleDateString();
+    document.getElementById('post-count').textContent = 
+        document.querySelectorAll('.post-list li').length;
     </script>
 </body>
-</html> 
+</html>
