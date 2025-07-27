@@ -19,33 +19,61 @@ Path(POEMS_DIR).mkdir(parents=True, exist_ok=True)
 Path(MEDIA_DIR).mkdir(parents=True, exist_ok=True)
 
 def flatten_text(msg_text):
-    """Convert Telegram's formatted text array into plain text with preserved links"""
+    """Convert Telegram's formatted text array into plain text with Markdown-style formatting"""
+    if msg_text is None:
+        return ""
+
     if isinstance(msg_text, str):
         return msg_text
 
+    if not isinstance(msg_text, (list, dict)):
+        return str(msg_text)
+
     plain_text = []
-    for segment in msg_text:
-        if isinstance(segment, dict):
-            if segment.get('type') == 'text_link':
-                plain_text.append(f"[{segment.get('text', '')}]({segment.get('href', '')})")
-            else:
-                plain_text.append(segment.get('text', ''))
-        else:
+
+    # Handle both single dict and list of dicts
+    segments = msg_text if isinstance(msg_text, list) else [msg_text]
+
+    for segment in segments:
+        if not isinstance(segment, dict):
             plain_text.append(str(segment))
+            continue
+
+        text = segment.get('text', '')
+        if not text:
+            continue
+
+        # Apply Markdown-style formatting
+        if segment.get('type') == 'bold':
+            text = f"**{text}**"
+        elif segment.get('type') == 'italic':
+            text = f"_{text}_"
+
+        plain_text.append(text)
+
     return ''.join(plain_text).strip()
 
-def is_quote_message(msg):
-    """Check if message contains a quote"""
-    if msg.get('type') != 'message':
-        return False
+def is_quote_message(text):
+    """Detect quotes using multiple patterns"""
+    patterns = [
+        r'Quote of the Day.*?"(.*?)"[^"]*(—|–|by)(.*?)(\n|$)',
+        r'"(.*?)"[^"]*(—|–|by)(.*?)(\n|$)',
+        r'📖.*?\n(.*?)\n(—|–|by)(.*?)(\n|$)'
+    ]
 
-    text = flatten_text(msg.get('text', ''))
-    return any(marker in text for marker in [
-        "Daily Quote",
-        "Quote of the Day",
-        "📖",
-        "Vocabulary Focus:"
-    ])
+    text = text.replace('\n', ' ')
+    return any(re.search(pattern, text, re.IGNORECASE) for pattern in patterns)
+
+    # Check for quote markers
+    has_quote_markers = any(
+        marker in text
+        for marker in ["Quote of the Day", "Daily Quote", "📖"]
+    )
+
+    # Check for quote structure (text followed by author)
+    has_quote_structure = re.search(r'".*?"\s*[—–-]\s*.+', text)
+
+    return has_quote_markers or has_quote_structure
 
 def is_poem_message(msg):
     """Check if message contains a poem"""
@@ -56,52 +84,40 @@ def is_poem_message(msg):
     return "Poem of the Day" in text or "poem" in text.lower()
 
 def extract_quote_components(full_text):
-    """Improved quote component extraction"""
+    """Extract components from formatted quote text"""
+    if not full_text:
+        return None
+
+    # Convert to plain text first if needed
+    if not isinstance(full_text, str):
+        full_text = flatten_text(full_text)
+
     components = {
         "quote": "",
         "author": "Unknown",
-        "vocabulary": {
-            "word": "",
-            "definition": ""
-        },
-        "quiz": {
-            "question": "",
-            "options": [],
-            "answer": ""
-        }
+        "vocabulary": [],
+        "quiz": None
     }
 
-    # Extract quote and author (improved regex)
-    quote_match = re.search(r'(?:"|“)(.*?)(?:"|”)(?:\s*[—–]\s*)(.*?)(?:\n|$)', full_text)
+    # Extract quote and author
+    quote_match = re.search(r'"(.*?)"(?:\s*[—–-]\s*)(.*?)(?:\n|$)', full_text)
     if quote_match:
         components["quote"] = quote_match.group(1).strip()
-        author = quote_match.group(2).strip()
+        components["author"] = quote_match.group(2).strip()
 
-        # Handle author links
-        author_link_match = re.search(r'\[(.*?)\]\((.*?)\)', author)
-        if author_link_match:
-            components["author"] = f'<a href="{author_link_match.group(2)}">{author_link_match.group(1)}</a>'
-        else:
-            components["author"] = author
+    # Extract vocabulary words (bold text)
+    components["vocabulary"] = re.findall(r'\*\*(.*?)\*\*', full_text)
 
-    # Improved vocabulary extraction
-    vocab_match = re.search(r"Vocabulary Focus:\s*([^\n]+)\n([^\n]+)", full_text)
-    if vocab_match:
-        components["vocabulary"]["word"] = vocab_match.group(1).strip('*').strip()
-        components["vocabulary"]["definition"] = vocab_match.group(2).strip()
-
-    ## Improved quiz extraction
-    quiz_match = re.search(r"What does (.*?) mean\?(.*?)Answer:\s*(.*?)(?:\n|$)", full_text, re.DOTALL)
+    # Extract quiz if present
+    quiz_match = re.search(r'Quiz: What does (.*?) mean\?(.*?)Answer:\s*(.*?)(?:\n|$)', full_text, re.DOTALL)
     if quiz_match:
-        components["vocabulary"]["word"] = quiz_match.group(1).strip('*').strip()  # Store in components
-        options_text = quiz_match.group(2).strip()
-        # Improved options splitting that handles A), B) format correctly
-        components["quiz"]["options"] = [
-            opt.strip()
-            for opt in re.split(r'\b[A-Z]\)', options_text)  # \b ensures we match whole words
-            if opt.strip()
-        ]
-        components["quiz"]["answer"] = quiz_match.group(3).strip()
+        components["quiz"] = {
+            "word": quiz_match.group(1).strip(),
+            "options": [opt.strip() for opt in re.split(r'\s*[A-Z]\)\s*', quiz_match.group(2)) if opt.strip()],
+            "answer": quiz_match.group(3).strip()
+        }
+
+    return components
 
 def extract_poem_components(full_text):
     """Extract poem components"""
@@ -131,59 +147,55 @@ def extract_poem_components(full_text):
         "content": content
     }
 
-def save_quote(msg, date):
-    """Improved quote saving with better quiz handling"""
-    full_text = flatten_text(msg.get('text', ''))
-    data = extract_quote_components(full_text)
-
-    if not data['quote']:
+def save_quote(msg, date, text):
+    """Save quote as properly formatted HTML with vocabulary"""
+    components = extract_quote_components(text)
+    if not components or not components.get('quote'):
+        print("🛑 Invalid quote components")
         return False
 
-    # Generate vocabulary section only if we have both word and definition
+    # Create safe filename
+    safe_author = re.sub(r'[^\w\s-]', '', components['author']).strip().replace(" ", "_")
+    filename = f"{date}_{safe_author[:50]}.html"
+
+    # Generate vocabulary section
     vocab_html = ""
-    if data['vocabulary']['word'] and data['vocabulary']['definition']:
+    if components['vocabulary']:
+        vocab_items = "\n".join(
+            f"<li><strong>{word}</strong></li>"
+            for word in components['vocabulary']
+        )
         vocab_html = f"""
         <div class="vocab-section">
-            <h2>Vocabulary Focus: {data['vocabulary']['word']}</h2>
-            <p>{data['vocabulary']['definition']}</p>
+            <h2>Vocabulary Focus</h2>
+            <ul>{vocab_items}</ul>
         </div>
         """
 
-    # Generate quiz section only if we have all components
+    # Generate quiz section if available
     quiz_html = ""
-    if (data['vocabulary']['word'] and
-        data['quiz']['options'] and
-        data['quiz']['answer']):
-
-        # Fixed options_html generation with proper parenthesis closing
-        options_html = "".join([
-            f'<div class="quiz-option">{chr(65+i)}) {opt}</div>'
-            for i, opt in enumerate(data['quiz']['options'][:4])  # Limit to 4 options
-        ])  # This closing square bracket was missing
-
+    if components.get('quiz'):
+        options_html = "\n".join(
+            f"<li>{opt}</li>"
+            for opt in components['quiz']['options'][:4]  # Limit to 4 options
+        )
         quiz_html = f"""
         <div class="quiz-section">
             <h3>Quiz</h3>
-            <p>What does <em>{data['vocabulary']['word']}</em> mean?</p>
-            <div class="quiz-options">
-                {options_html}
-            </div>
-            <details class="quiz-answer">
+            <p>What does <em>{components['quiz']['word']}</em> mean?</p>
+            <ol type="A">{options_html}</ol>
+            <details>
                 <summary>Show Answer</summary>
-                <p>{data['quiz']['answer']}</p>
+                <p>{components['quiz']['answer']}</p>
             </details>
         </div>
         """
-
-    # Create safe filename
-    safe_author = re.sub(r'[^\w\s-]', '', data['author']).strip().replace(" ", "_")
-    filename = f"{date}_{safe_author[:50]}.html"
 
     # Generate HTML content
     html_content = f"""<!DOCTYPE html>
 <html>
 <head>
-    <title>Quote: {data['quote'][:50]}...</title>
+    <title>Quote: {components['quote'][:50]}...</title>
     <link rel="stylesheet" href="../styles2.css">
 </head>
 <body>
@@ -191,8 +203,8 @@ def save_quote(msg, date):
         <h1>Quote of the Day</h1>
 
         <div class="quote-box">
-            <blockquote>"{data['quote']}"</blockquote>
-            <div class="author">— {data['author']}</div>
+            <blockquote>"{components['quote']}"</blockquote>
+            <div class="author">— {components['author']}</div>
         </div>
 
         {vocab_html}
@@ -201,8 +213,14 @@ def save_quote(msg, date):
 </body>
 </html>"""
 
+    # Ensure output directory exists
+    os.makedirs(QUOTES_DIR, exist_ok=True)
+
+    # Save file
     with open(os.path.join(QUOTES_DIR, filename), 'w', encoding='utf-8') as f:
         f.write(html_content)
+
+    print(f"💾 Saved quote to {filename}")
     return True
 
 def save_poem(msg, date):
@@ -256,6 +274,7 @@ def save_poem(msg, date):
     with open(os.path.join(POEMS_DIR, filename), 'w', encoding='utf-8') as f:
         f.write(html_content)
     return True
+
 def generate_index(quotes, poems):
     post_links = []
 
@@ -298,38 +317,90 @@ def generate_index(quotes, poems):
     with open(index_path, 'w', encoding='utf-8') as f:
         f.write(updated_content)
 
+
+def process_messages(data):
+    quote_count = 0
+    error_count = 0
+
+    for i, msg in enumerate(data.get('messages', [])):
+        try:
+            # Skip if not a proper message dictionary
+            if not isinstance(msg, dict) or 'text' not in msg:
+                continue
+
+            # Safely extract and flatten text
+            text = safe_extract_text(msg)
+            if not text:
+                continue
+
+            # Parse date safely
+            date = safe_parse_date(msg.get('date'))
+
+            # Check if this is a quote message
+            if is_quote_message(text):
+                print(f"\n🔍 Processing potential quote (Message {i}):")
+                print(text[:200] + ("..." if len(text) > 200 else ""))
+
+                if save_quote(msg, date, text):
+                    quote_count += 1
+                    print("✅ Saved quote successfully")
+
+        except Exception as e:
+            error_count += 1
+            print(f"⚠️ Error in message {i}: {str(e)}")
+            continue
+
+    return quote_count, error_count
+
+def safe_extract_text(msg):
+    """Completely safe text extraction"""
+    if not isinstance(msg, dict):
+        return ""
+
+    text = msg.get('text')
+    if text is None:
+        return ""
+
+    if isinstance(text, str):
+        return text.strip()
+
+    if isinstance(text, list):
+        return " ".join(str(item) for item in text if item)
+
+    return str(text)
+
+def safe_parse_date(date_str):
+    """Safe date parsing with fallback"""
+    try:
+        return datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S").strftime('%Y-%m-%d')
+    except:
+        return "1970-01-01"
+
 def main():
+    print("🚀 Starting quote processing...")
+
     try:
         with open(INPUT_JSON, 'r', encoding='utf-8') as f:
             data = json.load(f)
+        print(f"📦 Loaded JSON with {len(data.get('messages', []))} messages")
     except Exception as e:
-        print(f"❌ Error loading JSON: {e}")
+        print(f"❌ Failed to load JSON: {e}")
         return
 
-    quote_count = 0
+    quote_count, error_count = process_messages(data)
 
-    for msg in data.get('messages', []):
-        date_str = msg.get('date', '')
-        try:
-            date = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S").strftime('%Y-%m-%d')
-        except:
-            date = "1970-01-01"
-
-        try:
-            if is_quote_message(msg):
-                if save_quote(msg, date):
-                    quote_count += 1
-            # Poem processing completely removed
-        except Exception as e:
-            print(f"⚠️ Error processing message {msg.get('id')}: {e}")
-
-    # Only pass quote_count to generate_index
-    generate_index(quote_count, 0)  # Second argument (poem_count) set to 0
-
-    print(f"\n📊 Processing Complete:")
+    print("\n📊 Final Report:")
+    print(f"🔢 Total messages: {len(data.get('messages', []))}")
     print(f"✅ Quotes saved: {quote_count}")
-    print(f"📂 Output folder:")
-    print(f"   - Quotes: {os.path.abspath(QUOTES_DIR)}")
+    print(f"⚠️ Errors encountered: {error_count}")
+    print(f"📁 Output directory: {os.path.abspath(QUOTES_DIR)}")
+
+    if quote_count == 0:
+        print("\n🔴 No quotes were saved. Possible issues:")
+        print("- Message format doesn't match expected patterns")
+        print("- No valid quote messages in the JSON file")
+        print("- Check sample messages with the debug output")
+
 
 if __name__ == "__main__":
     main()
