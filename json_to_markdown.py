@@ -56,7 +56,7 @@ def is_poem_message(msg):
     return "Poem of the Day" in text or "poem" in text.lower()
 
 def extract_quote_components(full_text):
-    """Extract quote components with author links"""
+    """Improved quote component extraction"""
     components = {
         "quote": "",
         "author": "Unknown",
@@ -66,12 +66,13 @@ def extract_quote_components(full_text):
         },
         "quiz": {
             "question": "",
+            "options": [],
             "answer": ""
         }
     }
 
-    # Extract quote and author
-    quote_match = re.search(r'"(.*?)"(?:\s*—|\s*–)(.*?)(?:\n|$)', full_text)
+    # Extract quote and author (improved regex)
+    quote_match = re.search(r'(?:"|“)(.*?)(?:"|”)(?:\s*[—–]\s*)(.*?)(?:\n|$)', full_text)
     if quote_match:
         components["quote"] = quote_match.group(1).strip()
         author = quote_match.group(2).strip()
@@ -83,19 +84,24 @@ def extract_quote_components(full_text):
         else:
             components["author"] = author
 
-    # Extract vocabulary
-    vocab_match = re.search(r"Vocabulary Focus:\s*(.*?)\n(.*?)(?:\n\n|\nQuiz:|$)", full_text, re.DOTALL)
+    # Improved vocabulary extraction
+    vocab_match = re.search(r"Vocabulary Focus:\s*([^\n]+)\n([^\n]+)", full_text)
     if vocab_match:
-        components["vocabulary"]["word"] = vocab_match.group(1).strip()
+        components["vocabulary"]["word"] = vocab_match.group(1).strip('*').strip()
         components["vocabulary"]["definition"] = vocab_match.group(2).strip()
 
-    # Extract quiz
+    ## Improved quiz extraction
     quiz_match = re.search(r"What does (.*?) mean\?(.*?)Answer:\s*(.*?)(?:\n|$)", full_text, re.DOTALL)
     if quiz_match:
-        components["quiz"]["question"] = quiz_match.group(2).strip()
+        components["vocabulary"]["word"] = quiz_match.group(1).strip('*').strip()  # Store in components
+        options_text = quiz_match.group(2).strip()
+        # Improved options splitting that handles A), B) format correctly
+        components["quiz"]["options"] = [
+            opt.strip()
+            for opt in re.split(r'\b[A-Z]\)', options_text)  # \b ensures we match whole words
+            if opt.strip()
+        ]
         components["quiz"]["answer"] = quiz_match.group(3).strip()
-
-    return components
 
 def extract_poem_components(full_text):
     """Extract poem components"""
@@ -126,45 +132,52 @@ def extract_poem_components(full_text):
     }
 
 def save_quote(msg, date):
-    """Save quote as properly formatted HTML"""
+    """Improved quote saving with better quiz handling"""
     full_text = flatten_text(msg.get('text', ''))
     data = extract_quote_components(full_text)
 
     if not data['quote']:
         return False
 
-    # Create safe filename
-    safe_author = re.sub(r'[^\w\s-]', '', data['author']).strip().replace(" ", "_")
-    filename = f"{date}_{safe_author[:50]}.html"
-
-    # Generate vocabulary section
+    # Generate vocabulary section only if we have both word and definition
     vocab_html = ""
-    if data['vocabulary']['word']:
+    if data['vocabulary']['word'] and data['vocabulary']['definition']:
         vocab_html = f"""
         <div class="vocab-section">
-            <h2>Vocabulary Focus</h2>
-            <p><strong>{data['vocabulary']['word']}</strong><br>
-            {data['vocabulary']['definition']}</p>
+            <h2>Vocabulary Focus: {data['vocabulary']['word']}</h2>
+            <p>{data['vocabulary']['definition']}</p>
         </div>
         """
 
-    # Generate quiz section
+    # Generate quiz section only if we have all components
     quiz_html = ""
-    if data['quiz']['question'] and data['vocabulary']['word']:
-        options = [opt.strip() for opt in data['quiz']['question'].split(";") if opt.strip()]
+    if (data['vocabulary']['word'] and
+        data['quiz']['options'] and
+        data['quiz']['answer']):
+
+        # Fixed options_html generation with proper parenthesis closing
+        options_html = "".join([
+            f'<div class="quiz-option">{chr(65+i)}) {opt}</div>'
+            for i, opt in enumerate(data['quiz']['options'][:4])  # Limit to 4 options
+        ])  # This closing square bracket was missing
+
         quiz_html = f"""
         <div class="quiz-section">
-            <h2>Quiz</h2>
-            <p>What does {data['vocabulary']['word']} mean?</p>
-            <div class="options">
-                {"".join([f'<div>{opt}</div>' for opt in options])}
+            <h3>Quiz</h3>
+            <p>What does <em>{data['vocabulary']['word']}</em> mean?</p>
+            <div class="quiz-options">
+                {options_html}
             </div>
-            <details>
+            <details class="quiz-answer">
                 <summary>Show Answer</summary>
                 <p>{data['quiz']['answer']}</p>
             </details>
         </div>
         """
+
+    # Create safe filename
+    safe_author = re.sub(r'[^\w\s-]', '', data['author']).strip().replace(" ", "_")
+    filename = f"{date}_{safe_author[:50]}.html"
 
     # Generate HTML content
     html_content = f"""<!DOCTYPE html>
@@ -246,28 +259,27 @@ def save_poem(msg, date):
 def generate_index(quotes, poems):
     post_links = []
 
-    # Process quotes
+    # Process quotes - REMOVED date filtering
     for quote_file in os.listdir(QUOTES_DIR):
         if quote_file.endswith('.html'):
-            date = quote_file.split('_')[0]
-            post_links.append((date, f"quotes/{quote_file}", "Quote"))
-
-    # Process poems (if you want to keep them)
-    for poem_file in os.listdir(POEMS_DIR):
-        if poem_file.endswith('.html'):
-            date = poem_file.split('_')[0]
-            post_links.append((date, f"poems/{poem_file}", "Poem"))
+            date_str = quote_file.split('_')[0]
+            try:
+                date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
+                post_links.append((date_obj, f"quotes/{quote_file}", "Quote"))
+            except ValueError:
+                continue
 
     # Sort by date (newest first)
-    post_links.sort(key=lambda x: x[0])
+    post_links.sort(key=lambda x: x[0], reverse=True)
 
     # Generate HTML list items
     list_items = []
-    for date, path, post_type in post_links:
+    for date_obj, path, post_type in post_links:
+        date_str = date_obj.strftime('%Y-%m-%d')  # Format date consistently
         list_items.append(f"""
         <li>
-            <a href="{path}">  # This is the correct line - uses 'path' not 'filename'
-                <span class="timestamp">{date}</span>
+            <a href="{BASE_URL}{path}">
+                <span class="timestamp">{date_str}</span>
                 <span class="post-type">{post_type}</span>
             </a>
         </li>
@@ -278,11 +290,10 @@ def generate_index(quotes, poems):
     with open(index_path, 'r', encoding='utf-8') as f:
         content = f.read()
 
-    # CORRECTED LINE - Added missing parenthesis
     updated_content = content.replace(
         '<!-- List items remain the same but will display in reverse -->',
         '\n'.join(list_items)
-    )  # This closing parenthesis was missing
+    )
 
     with open(index_path, 'w', encoding='utf-8') as f:
         f.write(updated_content)
