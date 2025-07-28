@@ -258,7 +258,6 @@ def save_poem(msg, date):
     <div class="container">
         <h1>Poem of the Day</h1>
         <p class="subtitle">Learn English By Quotes and Wisdom</p>
-        <p style="color: #666; font-style: italic;">Learn English By Quotes and Wisdom</p>
 
         <div class="poem-box">
             <h2>{data['title']}</h2>
@@ -291,7 +290,12 @@ def generate_index(quotes, poems):
                 continue
 
     # Sort by date (newest first)
-    post_links.sort(key=lambda x: x[0], reverse=True)
+    post_links.sort(key=lambda x: x[0], reverse=True)  # Ensures newest first
+
+    # Add debug output:
+    print("\n🔢 Sorted Posts:")
+    for date, path, _ in post_links[:5]:  # Print first 5
+        print(f"{date} | {path}")
 
     # Generate HTML list items
     list_items = []
