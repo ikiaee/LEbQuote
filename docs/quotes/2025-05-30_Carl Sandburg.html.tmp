@@ -1,0 +1,11 @@
+<DOCTYPE html>
+<html>
+<head>
+    <title>Quote: Nothing happens unless first we dream....</title>
+    <link rel="stylesheet" href="../styles2.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Quote of the Day</h1>
+        <div class="quote-box">
+            <blockquote>"Nothing happens unless first we dream."</blockquote>

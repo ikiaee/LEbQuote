@@ -1,0 +1,10 @@
+<DOCTYPE html>
+<html>
+<head>
+    <title>Quote: I am not bound to win, but I am bound to be true. ...</title>
+    <link rel="stylesheet" href="../styles2.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Quote of the Day</h1>
+        <div class="quote-box">

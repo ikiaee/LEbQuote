@@ -201,7 +201,7 @@ def save_quote(msg, date, text):
 <body>
     <div class="container">
         <h1>Quote of the Day</h1>
-
+        <p class="subtitle">Learn English By Quotes and Wisdom</p>
         <div class="quote-box">
             <blockquote>"{components['quote']}"</blockquote>
             <div class="author">— {components['author']}</div>
@@ -233,7 +233,7 @@ def save_poem(msg, date):
     safe_title = re.sub(r'[^\w\s-]', '', data['title']).strip()
     filename = f"{date}_{safe_title[:50]}.html"
 
-    # Generate media HTML (fixed version)
+    # Generate media HTML
     media_html = ''
     if 'file' in msg:
         audio_path = f"/LEbQuote/media_files/{os.path.basename(msg.get('file', ''))}"
@@ -247,7 +247,8 @@ def save_poem(msg, date):
             <p><a href="{audio_path}" download>Download Audio</a></p>
         </div>'''
 
-    html_content = f"""<!DOCTYPE html>
+    # Build HTML content
+    html_content = f"""
 <html>
 <head>
     <title>Poem: {data['title']}</title>
@@ -256,6 +257,8 @@ def save_poem(msg, date):
 <body>
     <div class="container">
         <h1>Poem of the Day</h1>
+        <p class="subtitle">Learn English By Quotes and Wisdom</p>
+        <p style="color: #666; font-style: italic;">Learn English By Quotes and Wisdom</p>
 
         <div class="poem-box">
             <h2>{data['title']}</h2>
@@ -266,7 +269,6 @@ def save_poem(msg, date):
         </div>
 
         {media_html}
-
     </div>
 </body>
 </html>"""
@@ -370,7 +372,8 @@ def safe_extract_text(msg):
     return str(text)
 
 def safe_parse_date(date_str):
-    """Safe date parsing with fallback"""
+    """
+    Safe date parsing with fallback"""
     try:
         return datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S").strftime('%Y-%m-%d')
     except:
