@@ -291,3 +291,11 @@ footer {
 .author a:hover {
     text-decoration: underline;
 }
+/* Subtitle Styling */
+.subtitle {
+    color: #666;
+    font-style: italic;
+    text-align: center;
+    margin: -10px 0 20px 0;
+    font-size: 0.9em;
+}
